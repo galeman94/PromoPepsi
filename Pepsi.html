@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promo Pepsi 2026 — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+/* ── THEMES ── */
+[data-theme="light"] {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #f5f8fb;
+  --border: #dde4ed;
+  --border2: #c8d4e0;
+  --text: #0d1b2e;
+  --muted: #6b829a;
+  --shadow: 0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --table-hover: #f0f5ff;
+  --header-bg: #ffffff;
+  --header-border: #dde4ed;
+  --toggle-bg: #e2e8f0;
+  --toggle-knob: #ffffff;
+  --grid-line: #dde4ed;
+}
+[data-theme="dark"] {
+  --bg: #05090f;
+  --surface: #0c1220;
+  --surface2: #121c2e;
+  --border: #1e2d45;
+  --border2: #2a3d58;
+  --text: #e8f0f8;
+  --muted: #5a7a99;
+  --shadow: 0 1px 4px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.2);
+  --table-hover: rgba(0,74,173,.08);
+  --header-bg: #080e18;
+  --header-border: #1e2d45;
+  --toggle-bg: #1e2d45;
+  --toggle-knob: #004aad;
+  --grid-line: #1e2d45;
+}
+
+/* ── BASE ── */
+:root {
+  --accent: #004aad;
+  --accent2: #0066cc;
+  --red: #e4002b;
+  --success: #0a8a5c;
+  --success-bg-l: #e6f6f0;
+  --success-bg-d: rgba(10,138,92,.15);
+  --warning: #b05a00;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; font-size: 14px; transition: background .25s, color .25s; }
+
+/* ── HEADER ── */
+header {
+  background: var(--header-bg);
+  border-bottom: 2px solid var(--header-border);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 66px; position: sticky; top: 0; z-index: 100;
+  box-shadow: var(--shadow-sm);
+  transition: background .25s, border-color .25s;
+}
+.logo-area { display: flex; align-items: center; gap: 14px; }
+
+/* Pepsi Globe SVG inline */
+.pepsi-globe-svg { width: 42px; height: 42px; flex-shrink: 0; }
+
+.header-titles { display: flex; flex-direction: column; line-height: 1.1; }
+.header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.45rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text); }
+.header-title span { color: var(--accent); }
+.header-sub { font-size: .68rem; color: var(--muted); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 1px; }
+
+.header-right { display: flex; align-items: center; gap: 14px; }
+.refresh-badge { display: flex; align-items: center; gap: 7px; background: rgba(0,74,173,.08); border: 1px solid rgba(0,74,173,.2); border-radius: 20px; padding: 5px 12px; font-size: .72rem; color: var(--accent); font-weight: 500; }
+.refresh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+.last-update { font-size: .71rem; color: var(--muted); }
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  display: flex; align-items: center; gap: 7px;
+  cursor: pointer; user-select: none;
+}
+.theme-toggle-label { font-size: .72rem; color: var(--muted); font-weight: 500; }
+.toggle-switch {
+  width: 40px; height: 22px; border-radius: 11px;
+  background: var(--toggle-bg);
+  position: relative; cursor: pointer;
+  border: 1px solid var(--border2);
+  transition: background .25s;
+  flex-shrink: 0;
+}
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--toggle-knob);
+  top: 2px; left: 2px;
+  transition: left .25s, background .25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+[data-theme="dark"] .toggle-switch::after { left: 20px; }
+.toggle-icon { font-size: .9rem; }
+
+/* ── MAIN ── */
+main { padding: 22px 28px; max-width: 1600px; margin: 0 auto; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 2px; margin-bottom: 22px; border-bottom: 2px solid var(--border); }
+.tab { padding: 9px 20px; font-family: 'Barlow Condensed', sans-serif; font-size: .95rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); cursor: pointer; border: none; background: none; border-bottom: 3px solid transparent; transition: all .2s; margin-bottom: -2px; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── KPI ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 13px; margin-bottom: 20px; }
+.kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 17px 18px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow .2s, background .25s, border-color .25s; }
+.kpi-card:hover { box-shadow: var(--shadow); }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent-color, var(--accent)); border-radius: 10px 10px 0 0; }
+.kpi-label { font-size: .67rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+.kpi-value { font-family: 'Barlow Condensed', sans-serif; font-size: 1.9rem; font-weight: 800; color: var(--text); line-height: 1; }
+.kpi-sub { font-size: .7rem; color: var(--muted); margin-top: 5px; }
+
+/* ── SECTION ── */
+.section-title { font-family: 'Barlow Condensed', sans-serif; font-size: .95rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin: 22px 0 11px; border-left: 3px solid var(--accent); padding-left: 10px; }
+
+/* ── CHARTS ── */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.chart-wide { grid-column: 1 / -1; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; box-shadow: var(--shadow-sm); transition: background .25s, border-color .25s; }
+.chart-title { font-family: 'Barlow Condensed', sans-serif; font-size: .82rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+
+/* ── FILTER ROW ── */
+.filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 13px; flex-wrap: wrap; }
+.filter-label { font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+.size-tab { padding: 4px 11px; border-radius: 14px; border: 1px solid var(--border2); background: var(--surface2); color: var(--muted); font-size: .75rem; cursor: pointer; transition: all .2s; font-weight: 500; }
+.size-tab:hover { border-color: var(--accent); color: var(--accent); }
+.size-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.filter-select { background: var(--surface); border: 1px solid var(--border2); border-radius: 7px; padding: 5px 9px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .78rem; outline: none; cursor: pointer; transition: border-color .2s, background .25s; }
+.filter-select:focus { border-color: var(--accent); }
+
+/* ── BARS ── */
+.bar-chart { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 9px; }
+.bar-label { width: 210px; font-size: .76rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .8s ease; }
+.bar-val { width: 58px; text-align: right; font-size: .75rem; color: var(--muted); flex-shrink: 0; font-weight: 500; }
+
+/* ── DONUT ── */
+.donut-wrap { display: flex; align-items: center; gap: 20px; }
+.donut-legend { display: flex; flex-direction: column; gap: 7px; }
+.legend-item { display: flex; align-items: center; gap: 7px; font-size: .78rem; }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── LINE ── */
+.line-wrap { height: 200px; }
+.line-wrap svg { width: 100%; height: 100%; }
+
+/* ── TABLE ── */
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 18px; box-shadow: var(--shadow-sm); transition: background .25s, border-color .25s; }
+.table-header-bar { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); gap: 10px; flex-wrap: wrap; transition: background .25s; }
+.table-search { background: var(--surface); border: 1px solid var(--border2); border-radius: 7px; padding: 5px 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .78rem; width: 190px; outline: none; transition: border-color .2s, background .25s; }
+.table-search:focus { border-color: var(--accent); }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { text-align: left; padding: 8px 13px; font-family: 'Barlow Condensed', sans-serif; font-size: .7rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); white-space: nowrap; font-weight: 700; transition: background .25s; }
+.data-table td { padding: 7px 13px; font-size: .78rem; border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; transition: background .25s; }
+.data-table tr:hover td { background: var(--table-hover); }
+.data-table tr:last-child td { border-bottom: none; }
+.num { text-align: right !important; font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 7px; font-size: .68rem; font-weight: 600; }
+.badge-blue { background: rgba(0,74,173,.12); color: #004aad; }
+.badge-teal { background: rgba(0,102,204,.1); color: #0066cc; }
+.badge-green { background: rgba(10,138,92,.12); color: #0a8a5c; }
+.badge-gray { background: rgba(107,130,154,.1); color: var(--muted); }
+
+/* ── PAGINATION ── */
+.pagination { display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 9px 14px; border-top: 1px solid var(--border); font-size: .76rem; color: var(--muted); flex-wrap: wrap; background: var(--surface2); transition: background .25s; }
+.page-btn { background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 5px; padding: 3px 8px; cursor: pointer; font-size: .74rem; transition: all .15s; }
+.page-btn:hover { border-color: var(--accent); color: var(--accent); }
+.page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── MISC ── */
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; gap: 14px; color: var(--muted); }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-msg { text-align: center; padding: 40px; color: var(--muted); font-size: .85rem; }
+.error-msg strong { color: var(--red); display: block; margin-bottom: 8px; font-size: 1rem; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.no-data { color: var(--muted); font-size: .8rem; padding: 20px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <!-- Pepsi Globe 2023 — SVG inline -->
+    <svg class="pepsi-globe-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="circle-clip"><circle cx="50" cy="50" r="48"/></clipPath>
+      </defs>
+      <!-- azul base -->
+      <circle cx="50" cy="50" r="48" fill="#004aad"/>
+      <!-- franja roja superior -->
+      <path d="M 6,28 Q 50,20 94,28 L 94,50 Q 50,42 6,50 Z" fill="#e4002b" clip-path="url(#circle-clip)"/>
+      <!-- franja blanca -->
+      <path d="M 4,48 Q 50,40 96,48 L 96,56 Q 50,64 4,56 Z" fill="#ffffff" clip-path="url(#circle-clip)"/>
+      <!-- borde -->
+      <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="1"/>
+    </svg>
+    <div class="header-titles">
+      <div class="header-title">Promo <span>Pepsi 2026</span></div>
+      <div class="header-sub">Sed de Gloria</div>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <!-- Theme toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+      <span class="toggle-icon" id="toggleIcon">☀️</span>
+      <div class="toggle-switch"></div>
+      <span class="toggle-icon">🌙</span>
+    </div>
+    <div class="refresh-badge"><div class="refresh-dot"></div>Auto-refresh 1 hr</div>
+    <div class="last-update" id="lastUpdate">—</div>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('canjes',this)">🔁 Canjes</button>
+    <button class="tab" onclick="switchTab('combos',this)">⚽ Combos PWST</button>
+    <button class="tab" onclick="switchTab('match',this)">🔗 Match RUT</button>
+  </div>
+
+  <div id="tab-canjes" class="tab-panel active">
+    <div id="canjes-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+  </div>
+  <div id="tab-combos" class="tab-panel">
+    <div id="combos-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+  </div>
+  <div id="tab-match" class="tab-panel">
+    <div id="match-content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+  </div>
+</main>
+
+<script>
+// ── CONFIG ──
+const SOURCES = {
+  canjes: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRDKhUrngn2pGnyHNlPFXEvBU57ni0xKgUVQ3zOIHER3-UJkcSdCrDejHaZDx4yug/pub?output=csv',
+  combos: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHS3KSEVAkmV9EN92fdT8OgsMlHdpYENrAMIcHQwXG9r7Mlyb8OHAKR6Cvw6RkfY5j6lqKZ0BtNT9F/pub?output=csv'
+};
+const REFRESH_MS = 60 * 60 * 1000;
+// Blues palette para combos (monocromo azul)
+const BLUES = ['#003a8c','#004aad','#0057cc','#0066ee','#1a7fff','#4d9fff','#80bbff','#b3d6ff','#cce5ff','#e0f0ff'];
+const PAL = ['#004aad','#e4002b','#0099cc','#00875a','#e67700','#7c3aed','#0891b2','#be185d'];
+const PAGE = 15;
+
+const FUTBOL_COMBOS = {
+  '2l': ['Combo Promo Pepsi fútbol Pepsi 2l 1+5 uds total país','Combo Promo Pepsi fútbol Pepsi Black 2l 1+5 uds total país'],
+  '1.5l': ['Combo Promo Pepsi fútbol Pepsi 1.5l 1+5 uds total país','Combo Promo Pepsi fútbol Pepsi Black 1.5l 1+5 uds total país'],
+  '1l': ['Combo Promo Pepsi fútbol Pepsi 1l 7+5 uds total país','Combo Promo Pepsi fútbol Pepsi Black 1l 7+5 uds total país']
+};
+const ALL_FUTBOL = Object.values(FUTBOL_COMBOS).flat();
+const SIZES = ['2l','1.5l','1l'];
+
+let state = {
+  canjes:[], combos:[], futbol:[],
+  cPage:1, cbPage:1,
+  cSearch:'', cbSearch:'',
+  activeSize:'todos', cbDistr:'todos'
+};
+
+// ── THEME ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  localStorage.setItem('pepsi-theme', isDark ? 'light' : 'dark');
+}
+(function() {
+  const saved = localStorage.getItem('pepsi-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+})();
+
+// ── DATA ──
+async function fetchCSV(url) {
+  const r = await fetch(url + '&t=' + Date.now());
+  const txt = await r.text();
+  return new Promise(res => Papa.parse(txt, { header:true, skipEmptyLines:true, complete: d => res(d.data) }));
+}
+
+async function loadAll() {
+  try {
+    const [canjes, combos] = await Promise.all([fetchCSV(SOURCES.canjes), fetchCSV(SOURCES.combos)]);
+    state.canjes = canjes;
+    state.combos = combos;
+    state.futbol = combos.filter(r => ALL_FUTBOL.includes((r['Combo']||'').trim()));
+    document.getElementById('lastUpdate').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-UY');
+    renderCanjes(); renderCombos(); renderMatch();
+  } catch(e) {
+    ['canjes-content','combos-content','match-content'].forEach(id => {
+      document.getElementById(id).innerHTML = `<div class="error-msg"><strong>Error al cargar datos</strong>${e.message}</div>`;
+    });
+  }
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ── UTILS ──
+function num(v) { return parseFloat(String(v||0).replace(',','.')) || 0; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function normalizeRut(r) { return String(r||'').replace(/\D/g,'').trim(); }
+function fmtN(v, dec=0) { return v.toLocaleString('es-UY', {minimumFractionDigits:dec, maximumFractionDigits:dec}); }
+function botCanjeadas(bsc) { return bsc / 6 * 5 * 4; }
+function botRegaladas(bsc) { return bsc / 6 * 5 * 1; }
+
+// ── CANJES ──
+function parseCanjesRow(row) {
+  const p = (row.responses||'').split(';');
+  return { rut: normalizeRut(row.RUT), rut_raw: row.RUT||'',
+    session_id: row.session_id||'', created_at: row.created_at||'',
+    tamano: p[0]||'', email: p[3]||'',
+    nombre: ((p[4]||'')+' '+(p[5]||'')).trim() };
+}
+
+function groupByRut(rows) {
+  const map = {};
+  rows.forEach(r => {
+    if(!map[r.rut]) map[r.rut] = { rut:r.rut, rut_raw:r.rut_raw, nombre:r.nombre, email:r.email, canjes:[] };
+    map[r.rut].canjes.push(r);
+  });
+  return Object.values(map);
+}
+
+function renderCanjes() {
+  const rows = state.canjes.map(parseCanjesRow);
+  const byTam={}, byDate={};
+  rows.forEach(r => {
+    byTam[r.tamano] = (byTam[r.tamano]||0)+1;
+    const d = r.created_at.split(' ')[0]; byDate[d] = (byDate[d]||0)+1;
+  });
+  const dates = Object.keys(byDate).sort();
+  const rutsCombos = new Set(state.combos.map(r => normalizeRut(r['Rut'])));
+  const grouped = groupByRut(rows);
+  const matchCount = grouped.filter(g => rutsCombos.has(g.rut)).length;
+
+  document.getElementById('canjes-content').innerHTML = `
+  <div class="kpi-grid">
+    ${kpi('Total Canjes', rows.length.toLocaleString('es'), 'registros totales','#004aad')}
+    ${kpi('RUTs únicos', grouped.length.toLocaleString('es'), 'clientes distintos','#0099cc')}
+    ${kpi('Tamaños', Object.keys(byTam).length, Object.entries(byTam).map(([k,v])=>k+': '+v).join(' · '),'#e4002b')}
+    ${kpi('Con compra combo', matchCount, 'RUTs con combo asociado','#00875a')}
+    ${kpi('Días activos', dates.length, (dates[0]||'—')+' → '+(dates[dates.length-1]||'—'),'#e67700')}
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card"><div class="chart-title">Canjes por Tamaño</div>${donut(byTam, PAL)}</div>
+    <div class="chart-card"><div class="chart-title">RUTs: Match con Combos</div>${donut({'Con combo':matchCount,'Sin combo':grouped.length-matchCount}, ['#004aad','#dde4ed'])}</div>
+    <div class="chart-card chart-wide"><div class="chart-title">Canjes por Día</div>${lineChart(dates, byDate)}</div>
+  </div>
+  ${tableCanjes(grouped, rutsCombos)}`;
+}
+
+function tableCanjes(grouped, rutsCombos) {
+  const s = state.cSearch.toLowerCase();
+  const f = s ? grouped.filter(g =>
+    g.rut_raw.toLowerCase().includes(s) || g.nombre.toLowerCase().includes(s) ||
+    g.email.toLowerCase().includes(s) || g.canjes.some(c => c.tamano.toLowerCase().includes(s))
+  ) : grouped;
+  const pages = Math.ceil(f.length/PAGE)||1;
+  state.cPage = Math.min(state.cPage, pages);
+  const sl = f.slice((state.cPage-1)*PAGE, state.cPage*PAGE);
+  return `<div class="table-wrap">
+    <div class="table-header-bar">
+      <div class="chart-title" style="margin:0">Canjes agrupados por RUT (${f.length} clientes)</div>
+      <input class="table-search" placeholder="Buscar RUT o nombre..." value="${esc(state.cSearch)}"
+        oninput="state.cSearch=this.value;state.cPage=1;renderCanjes()">
+    </div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr>
+      <th>RUT</th><th>Nombre</th><th class="num">Canjes</th><th>Tamaños</th><th>Match Combo</th><th>Email</th>
+    </tr></thead><tbody>${sl.map(g => {
+      const matched = rutsCombos.has(g.rut);
+      const tamMap = g.canjes.reduce((acc,c)=>{ acc[c.tamano]=(acc[c.tamano]||0)+1; return acc; },{});
+      const tamStr = Object.entries(tamMap).map(([k,v])=>`<span class="badge badge-blue">${esc(k)}×${v}</span>`).join(' ');
+      return `<tr>
+        <td style="font-weight:600">${esc(g.rut_raw)}</td>
+        <td>${esc(g.nombre||'—')}</td>
+        <td class="num">${g.canjes.length}</td>
+        <td>${tamStr}</td>
+        <td>${matched ? '<span class="badge badge-green">✓ Compró combo</span>' : '<span class="badge badge-gray">Sin combo</span>'}</td>
+        <td style="color:var(--muted)">${esc(g.email||'—')}</td>
+      </tr>`;
+    }).join('')}</tbody></table></div>
+    ${pagination(pages, state.cPage, 'state.cPage', 'renderCanjes')}
+  </div>`;
+}
+
+// ── COMBOS PWST ──
+function renderCombos() {
+  const size = state.activeSize;
+  const distr = state.cbDistr;
+
+  const bySize = size === 'todos' ? state.futbol :
+    state.futbol.filter(r => FUTBOL_COMBOS[size]?.includes((r['Combo']||'').trim()));
+
+  const allDistrs = [...new Set(state.futbol.map(r => r['Distribuidor (Cli.)']||'').filter(Boolean))].sort();
+  const filtered = distr === 'todos' ? bySize : bySize.filter(r => (r['Distribuidor (Cli.)']||'') === distr);
+
+  // KPI: Combos Canjeados = "Vta Bruta+Cta y Orden Bultos"
+  const allFut = state.futbol;
+  const totalCC = allFut.reduce((s,r) => s+num(r['Vta Bruta+Cta y Orden Bultos']),0);
+  const totalBotCanj = botCanjeadas(totalCC);
+  const totalBotReg = botRegaladas(totalCC);
+  const distrsSet = new Set(allFut.map(r=>r['Distribuidor (Cli.)']||'').filter(Boolean));
+
+  // por combo (overview)
+  const ccByCombo = {};
+  ALL_FUTBOL.forEach(c => ccByCombo[c] = 0);
+  allFut.forEach(r => { const c=(r['Combo']||'').trim(); if(ccByCombo[c]!==undefined) ccByCombo[c]+=num(r['Vta Bruta+Cta y Orden Bultos']); });
+
+  // por distribuidor (filtrado size)
+  const byDistr = {};
+  bySize.forEach(r => {
+    const d = r['Distribuidor (Cli.)']||'_Sin identificar';
+    byDistr[d] = (byDistr[d]||0)+num(r['Vta Bruta+Cta y Orden Bultos']);
+  });
+  const topDistr = Object.entries(byDistr).sort((a,b)=>b[1]-a[1]);
+
+  // por combo (filtrado size+distr)
+  const byComboF = {};
+  filtered.forEach(r => {
+    const c = (r['Combo']||'').trim().replace('Combo Promo Pepsi fútbol ','');
+    byComboF[c] = (byComboF[c]||0)+num(r['Vta Bruta+Cta y Orden Bultos']);
+  });
+  const topComboF = Object.entries(byComboF).sort((a,b)=>b[1]-a[1]);
+
+  const ccByComboClean = {};
+  Object.entries(ccByCombo).forEach(([k,v]) => { ccByComboClean[k.replace('Combo Promo Pepsi fútbol ','')] = v; });
+
+  document.getElementById('combos-content').innerHTML = `
+  <div class="kpi-grid">
+    ${kpi('Combos Canjeados', fmtN(totalCC,2), 'Vta Bruta+Cta y Orden Bultos','#004aad')}
+    ${kpi('Botellas Canjeadas', fmtN(Math.round(totalBotCanj)), 'CC ÷ 6 × 5 × 4','#0057cc')}
+    ${kpi('Botellas Regaladas', fmtN(Math.round(totalBotReg)), 'CC ÷ 6 × 5 × 1','#e4002b')}
+    ${kpi('Distribuidores', distrsSet.size, 'con combos PWST','#00875a')}
+    ${kpi('Combos activos', Object.values(ccByCombo).filter(v=>v>0).length+'/'+ALL_FUTBOL.length, 'con combos > 0','#e67700')}
+  </div>
+
+  <div class="section-title">Vista General — Combos Canjeados por Combo</div>
+  <div class="chart-card chart-wide" style="margin-bottom:16px">
+    ${bars(Object.entries(ccByComboClean).sort((a,b)=>b[1]-a[1]), Math.max(...Object.values(ccByComboClean),1), v=>fmtN(v,2), BLUES)}
+  </div>
+
+  <div class="section-title">Detalle por Tamaño y Distribuidor</div>
+  <div class="filter-row">
+    <span class="filter-label">Tamaño:</span>
+    ${['todos','2l','1.5l','1l'].map(s=>`<button class="size-tab${state.activeSize===s?' active':''}" onclick="state.activeSize='${s}';renderCombos()">${s==='todos'?'Todos':s.toUpperCase()}</button>`).join('')}
+    <span class="filter-label" style="margin-left:10px">Distribuidor:</span>
+    <select class="filter-select" onchange="state.cbDistr=this.value;renderCombos()">
+      <option value="todos" ${distr==='todos'?'selected':''}>Todos</option>
+      ${allDistrs.map(d=>`<option value="${esc(d)}" ${distr===d?'selected':''}>${esc(d)}</option>`).join('')}
+    </select>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card chart-wide">
+      <div class="chart-title">Combos Canjeados por Distribuidor${size!=='todos'?' — '+size.toUpperCase():''}</div>
+      ${topDistr.length ? bars(topDistr.slice(0,15), topDistr[0]?.[1]||1, v=>fmtN(v,2), BLUES) : noData()}
+    </div>
+    <div class="chart-card chart-wide">
+      <div class="chart-title">Combos Canjeados por Combo${size!=='todos'?' — '+size.toUpperCase():''}${distr!=='todos'?' — '+distr:''}</div>
+      ${topComboF.length ? bars(topComboF, topComboF[0]?.[1]||1, v=>fmtN(v,2), BLUES) : noData()}
+    </div>
+  </div>
+  ${tableCombos(filtered)}`;
+}
+
+function tableCombos(rows) {
+  const s = state.cbSearch.toLowerCase();
+  const f = s ? rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(s))) : rows;
+  const pages = Math.ceil(f.length/PAGE)||1;
+  state.cbPage = Math.min(state.cbPage, pages);
+  const sl = f.slice((state.cbPage-1)*PAGE, state.cbPage*PAGE);
+  return `<div class="table-wrap">
+    <div class="table-header-bar">
+      <div class="chart-title" style="margin:0">Detalle Combos PWST (${f.length})</div>
+      <input class="table-search" placeholder="Buscar..." value="${esc(state.cbSearch)}"
+        oninput="state.cbSearch=this.value;state.cbPage=1;renderCombos()">
+    </div>
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr>
+      <th>Distribuidor</th><th>Cliente</th><th>Combo</th><th class="num">Combos Canjeados</th><th class="num">Bot. Canjeadas</th><th class="num">Bot. Regaladas</th><th>RUT</th>
+    </tr></thead><tbody>${sl.map(r => {
+      const cc = num(r['Vta Bruta+Cta y Orden Bultos']);
+      return `<tr>
+        <td>${esc(r['Distribuidor (Cli.)']||'—')}</td>
+        <td>${esc(r['Cliente (Cli.)']||'—')}</td>
+        <td><span class="badge badge-blue">${esc((r['Combo']||'').replace('Combo Promo Pepsi fútbol ',''))}</span></td>
+        <td class="num">${fmtN(cc,2)}</td>
+        <td class="num">${fmtN(Math.round(botCanjeadas(cc)))}</td>
+        <td class="num">${fmtN(Math.round(botRegaladas(cc)))}</td>
+        <td style="color:var(--muted);font-size:.72rem">${esc(r['Rut']||'—')}</td>
+      </tr>`;
+    }).join('')}</tbody></table></div>
+    ${pagination(pages, state.cbPage, 'state.cbPage', 'renderCombos')}
+  </div>`;
+}
+
+// ── MATCH RUT ──
+function renderMatch() {
+  const canjesRows = state.canjes.map(row => {
+    const p = (row.responses||'').split(';');
+    return { rut: normalizeRut(row.RUT), rut_raw: row.RUT||'',
+      nombre: ((p[4]||'')+' '+(p[5]||'')).trim(), tamano: p[0]||'' };
+  });
+
+  const combosByRut = {};
+  state.futbol.forEach(r => {
+    const rut = normalizeRut(r['Rut']); if(!rut) return;
+    if(!combosByRut[rut]) combosByRut[rut] = { distrs:new Set(), bySizeCC:{'2l':0,'1.5l':0,'1l':0} };
+    combosByRut[rut].distrs.add(r['Distribuidor (Cli.)']||'');
+    const combo = (r['Combo']||'').trim();
+    SIZES.forEach(sz => {
+      if(FUTBOL_COMBOS[sz]?.includes(combo)) combosByRut[rut].bySizeCC[sz] += num(r['Vta Bruta+Cta y Orden Bultos']);
+    });
+  });
+
+  const canjesByRut = {};
+  canjesRows.forEach(c => {
+    if(!canjesByRut[c.rut]) canjesByRut[c.rut] = { rut:c.rut, rut_raw:c.rut_raw, nombre:c.nombre, sizes:{'2l':0,'1.5l':0,'1l':0,'otros':0} };
+    if(SIZES.includes(c.tamano)) canjesByRut[c.rut].sizes[c.tamano]++;
+    else canjesByRut[c.rut].sizes['otros']++;
+  });
+
+  const allRuts = Object.values(canjesByRut);
+  const matched = allRuts.filter(g => combosByRut[g.rut]);
+  const notMatched = allRuts.filter(g => !combosByRut[g.rut]);
+  const matchPct = allRuts.length ? (matched.length/allRuts.length*100).toFixed(0) : 0;
+
+  document.getElementById('match-content').innerHTML = `
+  <div class="kpi-grid">
+    ${kpi('RUTs con match', matched.length+' / '+allRuts.length, matchPct+'% tienen RUT en Combos PWST','#004aad')}
+    ${kpi('Sin match', ''+notMatched.length, 'canjearon sin compra detectada','#e4002b')}
+    ${kpi('% Match', matchPct+'%', 'de clientes con combo asociado','#00875a')}
+    ${kpi('% Sin match', (100-parseInt(matchPct))+'%', 'de clientes sin combo detectado','#e67700')}
+  </div>
+
+  <div class="section-title">Clientes que canjearon Y compraron combos PWST (${matched.length})</div>
+  <div class="table-wrap" style="margin-bottom:18px">
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr>
+      <th>RUT</th><th>Nombre</th><th>Distribuidor(es)</th>
+      <th class="num">Canje 2l</th><th class="num">Canje 1.5l</th><th class="num">Canje 1l</th><th class="num">Total Canjes</th>
+      <th class="num">Combo 2l (CC)</th><th class="num">Combo 1.5l (CC)</th><th class="num">Combo 1l (CC)</th><th class="num">Total CC</th>
+    </tr></thead><tbody>${matched.slice(0,150).map(g => {
+      const cb = combosByRut[g.rut];
+      const totalCanjes = SIZES.reduce((s,sz)=>s+g.sizes[sz],0);
+      const totalCC = SIZES.reduce((s,sz)=>s+cb.bySizeCC[sz],0);
+      return `<tr>
+        <td style="font-weight:600">${esc(g.rut_raw)}</td>
+        <td>${esc(g.nombre||'—')}</td>
+        <td style="color:var(--muted);font-size:.74rem">${esc([...cb.distrs].join(', '))}</td>
+        <td class="num">${g.sizes['2l']||0}</td>
+        <td class="num">${g.sizes['1.5l']||0}</td>
+        <td class="num">${g.sizes['1l']||0}</td>
+        <td class="num" style="font-weight:600">${totalCanjes}</td>
+        <td class="num">${fmtN(cb.bySizeCC['2l'],2)}</td>
+        <td class="num">${fmtN(cb.bySizeCC['1.5l'],2)}</td>
+        <td class="num">${fmtN(cb.bySizeCC['1l'],2)}</td>
+        <td class="num" style="font-weight:600">${fmtN(totalCC,2)}</td>
+      </tr>`;
+    }).join('')}${matched.length>150?`<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:10px">…y ${matched.length-150} más</td></tr>`:''}</tbody></table></div>
+  </div>
+
+  <div class="section-title">Canjearon SIN match en Combos (${notMatched.length})</div>
+  <div class="table-wrap">
+    <div style="overflow-x:auto"><table class="data-table"><thead><tr>
+      <th>RUT</th><th>Nombre</th>
+      <th class="num">Canje 2l</th><th class="num">Canje 1.5l</th><th class="num">Canje 1l</th><th class="num">Total Canjes</th>
+    </tr></thead><tbody>${notMatched.slice(0,80).map(g => {
+      const totalCanjes = SIZES.reduce((s,sz)=>s+g.sizes[sz],0);
+      return `<tr>
+        <td style="font-weight:600">${esc(g.rut_raw)}</td>
+        <td>${esc(g.nombre||'—')}</td>
+        <td class="num">${g.sizes['2l']||0}</td>
+        <td class="num">${g.sizes['1.5l']||0}</td>
+        <td class="num">${g.sizes['1l']||0}</td>
+        <td class="num" style="font-weight:600">${totalCanjes}</td>
+      </tr>`;
+    }).join('')}${notMatched.length>80?`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:10px">…y ${notMatched.length-80} más</td></tr>`:''}</tbody></table></div>
+  </div>`;
+}
+
+// ── CHART HELPERS ──
+function kpi(label, val, sub, color) {
+  return `<div class="kpi-card" style="--accent-color:${color}">
+    <div class="kpi-label">${label}</div><div class="kpi-value">${val}</div><div class="kpi-sub">${sub}</div>
+  </div>`;
+}
+
+function bars(entries, max, fmt, palette) {
+  fmt = fmt || fmtN;
+  palette = palette || PAL;
+  return `<div class="bar-chart">${entries.map(([label,val],i) => `
+    <div class="bar-row">
+      <div class="bar-label" title="${esc(label)}">${esc(label)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${max>0?(val/max*100).toFixed(1):0}%;background:${palette[i%palette.length]}"></div></div>
+      <div class="bar-val">${fmt(val)}</div>
+    </div>`).join('')}</div>`;
+}
+
+function donut(obj, palette) {
+  palette = palette || PAL;
+  const entries = Object.entries(obj).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const total = entries.reduce((s,[,v])=>s+v,0);
+  if(!total) return noData();
+  const R=58, cx=70, cy=70, r=36; let angle = -Math.PI/2;
+  const slices = entries.map(([label,val],i) => {
+    const pct=val/total, a1=angle, a2=angle+pct*2*Math.PI; angle=a2;
+    const x1=cx+R*Math.cos(a1), y1=cy+R*Math.sin(a1), x2=cx+R*Math.cos(a2), y2=cy+R*Math.sin(a2);
+    return {label,val,pct, path:`M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${pct>.5?1:0},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`, color:palette[i%palette.length]};
+  });
+  return `<div class="donut-wrap">
+    <svg width="140" height="140" viewBox="0 0 140 140">
+      ${slices.map(s=>`<path d="${s.path}" fill="${s.color}"/>`).join('')}
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--surface)"/>
+      <text x="${cx}" y="${cy}" text-anchor="middle" dy=".35em" fill="var(--text)" font-size="13" font-family="Barlow Condensed" font-weight="700">${total.toLocaleString('es-UY')}</text>
+    </svg>
+    <div class="donut-legend">${slices.slice(0,6).map(s=>`
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${s.color}"></div>
+        <span>${esc(s.label)} <span style="color:var(--muted)">(${(s.pct*100).toFixed(0)}%)</span></span>
+      </div>`).join('')}</div>
+  </div>`;
+}
+
+function lineChart(dates, byDate) {
+  if(!dates.length) return noData();
+  const vals = dates.map(d => byDate[d]||0);
+  const maxV = Math.max(...vals)||1;
+  const W=760, H=190, pL=44, pR=16, pT=18, pB=34;
+  const iW=W-pL-pR, iH=H-pT-pB;
+  const pts = dates.map((d,i) => [pL+(i/(dates.length-1||1))*iW, pT+iH-(vals[i]/maxV)*iH]);
+  const pathD = pts.map((p,i) => (i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const area = pathD+` L${pts[pts.length-1][0].toFixed(1)},${pT+iH} L${pts[0][0].toFixed(1)},${pT+iH} Z`;
+  const yLabels = [0,.25,.5,.75,1].map(f => ({ y: pT+iH-f*iH, val: Math.round(maxV*f) }));
+  return `<div class="line-wrap"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <linearGradient id="aG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#004aad" stop-opacity=".18"/>
+        <stop offset="100%" stop-color="#004aad" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    ${yLabels.map(l=>`
+      <line x1="${pL}" y1="${l.y.toFixed(1)}" x2="${W-pR}" y2="${l.y.toFixed(1)}" stroke="var(--grid-line)" stroke-width="1"/>
+      <text x="${pL-5}" y="${(l.y+4).toFixed(1)}" text-anchor="end" fill="var(--muted)" font-size="10">${l.val}</text>
+    `).join('')}
+    <path d="${area}" fill="url(#aG)"/>
+    <path d="${pathD}" fill="none" stroke="#004aad" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((p,i)=>`
+      <circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" fill="#004aad" stroke="var(--surface)" stroke-width="2"/>
+      <text x="${p[0].toFixed(1)}" y="${(H-5).toFixed(1)}" text-anchor="middle" fill="var(--muted)" font-size="9.5">${dates[i]}</text>
+      <text x="${p[0].toFixed(1)}" y="${(p[1]-9).toFixed(1)}" text-anchor="middle" fill="#004aad" font-size="10" font-weight="700">${vals[i]}</text>
+    `).join('')}
+  </svg></div>`;
+}
+
+function noData() { return '<div class="no-data">Sin datos</div>'; }
+
+function pagination(pages, current, varName, renderFn) {
+  if(pages<=1) return '';
+  const btns = [];
+  for(let i=1;i<=pages;i++) btns.push(`<button class="page-btn${i===current?' active':''}" onclick="${varName}=${i};${renderFn}()">${i}</button>`);
+  return `<div class="pagination">Pág ${current}/${pages} &nbsp; ${btns.join('')}</div>`;
+}
+
+loadAll();
+setInterval(loadAll, REFRESH_MS);
+</script>
+</body>
+</html>
